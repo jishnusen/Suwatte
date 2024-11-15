@@ -15,24 +15,12 @@ struct MigrationEntryListView: View {
     }
 
     var body: some View {
-        ForEach(Array(entries.enumerated()), id: \.offset) { index, content in
-            Section {
-                let state = model.operations[content.id] ?? .idle
-                MigrationEntryListCell(content: content, state: state)
-                    .padding(.top, 10)
-                    .id(content.id + (state.value()?.0?.id ?? ""))
-            } header: {
-                if index == 0 {
-                    Text("Titles")
-                } else {
-                    Rectangle().frame(height: 0)
-                }
-            } footer: {
-                Rectangle().frame(height: 0)
-            }
-            .listRowInsets(EdgeInsets(top: 0, leading: 10, bottom: 10, trailing: 10))
-            .headerProminence(.increased)
-            // Ugly hack, there is no SectionSeperatorSpacing in ios 15 so we need it right now
+        // TODO: Update styling when UIKit is replacing this view
+        ForEach(entries) { content in
+            let state = model.operations[content.id] ?? .idle
+            MigrationEntryListCell(content: content, state: state)
+                .padding(.top, 10)
+                .id(content.id + (state.value()?.0?.id ?? ""))
         }
     }
 }
