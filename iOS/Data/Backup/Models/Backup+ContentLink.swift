@@ -17,9 +17,9 @@ struct CodableContentLink: Codable {
         .init(id: contentLink.id, libraryEntryId: contentLink.entry!.id, contentId: contentLink.content!.id)
     }
 
-    func restore(storedContent: [StoredContent]?, library: [LibraryEntry]?) throws -> ContentLink? {
-        if let storedContent = storedContent, let library = library {
-            let content = storedContent.first { $0.id == contentId }
+    func restore(storedContent: Dictionary<String, [StoredContent]>, library: [LibraryEntry]?) throws -> ContentLink? {
+        if let library = library {
+            let content = storedContent[contentId]?.first
             let entry = library.first { $0.id == libraryEntryId }
 
             guard let entry, let content else {

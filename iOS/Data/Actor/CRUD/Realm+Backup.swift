@@ -119,11 +119,12 @@ extension RealmActor {
     func restoreBackup(backup: Backup) async throws {
         try await resetDB()
 
+        let storedContentDict: Dictionary<String, [StoredContent]> = Dictionary(grouping: backup.storedContents!, by: \.id)
         var progressMarkers: [ProgressMarker] = []
 
         if backup.schemaVersion > 15 {
             if let entries = backup.library {
-                try entries.forEach { try $0.fillContent(data: backup.storedContents ) }
+                try entries.forEach { try $0.fillContent(data: storedContentDict ) }
             }
 
             if let entries = backup.progressMarkers {
@@ -137,13 +138,13 @@ extension RealmActor {
                         continue
                     }
 
-                    try chapter.fromBackup(data: backup.storedContents)
+                    try chapter.fromBackup(data: storedContentDict)
                     progressMarkers.append(marker)
                 }
             }
         }
 
-        let contentLinks: [ContentLink] = try backup.contentLinks?.compactMap { try $0.restore(storedContent: backup.storedContents, library: backup.library) } ?? []
+        let contentLinks: [ContentLink] = try backup.contentLinks?.compactMap { try $0.restore(storedContent: storedContentDict, library: backup.library) } ?? []
 
         try await realm.asyncWrite {
             if let markers = backup.markers {
