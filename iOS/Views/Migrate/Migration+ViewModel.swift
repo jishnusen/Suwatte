@@ -191,20 +191,25 @@ extension MigrationController {
 
         guard let result else { return nil }
         let contentId = result.id
-        let content = try? await source.getContent(id: contentId)
-        guard let content else { return nil }
 
-        var chapters = content.chapters
-
-        if chapters == nil {
-            chapters = await getChapters(for: source, id: contentId)
-        }
+        let chapters = await getChapters(for: source, id: contentId)
 
         let target = chapters?.first
 
         guard let target else { return nil }
 
+        if var chapters = chapters {
+            chapters = STTHelpers.filterChapters(chapters, with: .init(contentId: contentId, sourceId: source.id))
+            await storeChapters(chapters: chapters
+                .map { $0.toStoredChapter(sourceID: source.id, contentID: contentId) })
+        }
+
         return (TaggedHighlight(from: result, with: source.id), target.number, chapters?.count ?? 0)
+    }
+
+    func storeChapters(chapters: [StoredChapter]) async {
+        let actor = await RealmActor.shared()
+        await actor.storeChapters(chapters)
     }
 
     func getChapters(for sourceId: String, id: String) async -> [DSKCommon.Chapter]? {
@@ -215,8 +220,17 @@ extension MigrationController {
         return await getChapters(for: source, id: id)
     }
 
-    private func getChapters(for source: AnyContentSource, id: String) async -> [DSKCommon.Chapter] {
-        (try? await source.getContentChapters(contentId: id)) ?? []
+    private func getChapters(for source: AnyContentSource, id: String) async -> [DSKCommon.Chapter]? {
+        let content = try? await source.getContent(id: id)
+        guard let content else { return nil }
+
+        var chapters = content.chapters
+
+        if chapters == nil {
+            chapters = (try? await source.getContentChapters(contentId: id))
+        }
+
+        return chapters
     }
 
     func getStoredChapterCount(for content: TaggedHighlight) async -> Int {
