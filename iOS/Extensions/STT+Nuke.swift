@@ -128,7 +128,7 @@ struct NukeWhitespaceProcessor: ImageProcessing, Hashable {
             }
         }
 
-        if lowX > highX {
+        if lowX >= highX || lowY >= highY {
             return nil
         }
 
