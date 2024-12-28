@@ -209,7 +209,7 @@ extension SDM {
                 .contentsOfDirectory(at: url, includingPropertiesForKeys: nil)
             let imageUrls = directoryContents
                 .filter { imageExtensions.contains($0.pathExtension) }
-                .sorted(by: \.fileName, descending: false)
+                .sorted { (Int($0.fileName) ?? 0) < (Int($1.fileName) ?? 0) }
 
             data.urls = imageUrls
             return data
